@@ -1,5 +1,19 @@
 name: 'Publish results'
 description: 'Publish the results of a Gradle build'
+inputs:
+  build_dir:
+    description: The top level build dir to archive if the build fails
+    required: true
+    default: build
+  test_result_files:
+    description: 'File patterns of test result files. Relative paths are known to work best, while the non-Docker action also works with absolute paths. Supports "*", "**", "?", and "[]" character ranges. Use multiline string for multiple patterns. Patterns starting with "!" exclude the matching files. There have to be at least one pattern starting without a "!".'
+    required: true
+    default: build/**/test-results/**/*.xml
+  artifacts_dir:
+    description: The artifacts dir to archive if the build succeeds
+    required: true
+    default: build/artifacts
+
 runs:
   using: "composite"
   steps:
@@ -9,19 +23,18 @@ runs:
       if: always()
       with:
         check_name: Unit Test Results
-        junit_files: |
-          build/**/test-results/**/*.xml
+        files: ${{ inputs.test_result_files }}
 
     - name: Archive build results
       uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: ${{ github.event.repository.name }}-${{github.run_number}}-build
-        path: build
+        path: ${{ inputs.build_dir }}
 
     - name: Archive output
       uses: actions/upload-artifact@v4
       if: success()
       with:
         name: ${{ github.event.repository.name }}-${{github.run_number}}-artifacts
-        path: build/artifacts
+        path: ${{ inputs.artifacts_dir }}
