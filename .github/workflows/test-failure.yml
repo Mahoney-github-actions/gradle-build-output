@@ -10,7 +10,8 @@ jobs:
   test-failure:
     runs-on: ubuntu-latest
     steps:
+      - run: echo 'Failed!'; exit 1
       - uses: Mahoney-github-actions/gradle-build-output@improve
+        if: always()
         with:
-          is_success: false
-
+          is_success: ${{ success() }}

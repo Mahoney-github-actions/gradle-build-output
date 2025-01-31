@@ -10,7 +10,9 @@ jobs:
   test-success:
     runs-on: ubuntu-latest
     steps:
+      - run: echo 'Succeeded!'
       - uses: Mahoney-github-actions/gradle-build-output@improve
+        if: always()
         with:
-          is_success: true
+          is_success: ${{ success() }}
 
