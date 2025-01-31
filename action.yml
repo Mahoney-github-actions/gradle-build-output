@@ -1,6 +1,9 @@
 name: 'Publish results'
 description: 'Publish the results of a Gradle build'
 inputs:
+  is_success:
+    description: Whether or not the calling workflow succeeded. Either 'true' or 'false'.
+    required: true
   build_dir:
     description: The top level build dir to archive if the build fails
     required: true
@@ -17,24 +20,27 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Check action input is valid
+      if: ${{ inputs.is_success != 'true' && inputs.is_success != 'false' }}
+      shell: sh
+      run: echo "is_success input must be one of 'true' or 'false', was '${{ inputs.is_success }}'"; exit 1
 
     - name: Publish Unit Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
-      if: always()
       with:
         check_name: Unit Test Results
         files: ${{ inputs.test_result_files }}
 
     - name: Archive build results
       uses: actions/upload-artifact@v4
-      if: failure()
+      if: ${{ inputs.is_success == 'false' }}
       with:
         name: ${{ github.event.repository.name }}-${{github.run_number}}-build
         path: ${{ inputs.build_dir }}
 
     - name: Archive output
       uses: actions/upload-artifact@v4
-      if: success()
+      if: ${{ inputs.is_success == 'true' }}
       with:
         name: ${{ github.event.repository.name }}-${{github.run_number}}-artifacts
         path: ${{ inputs.artifacts_dir }}
