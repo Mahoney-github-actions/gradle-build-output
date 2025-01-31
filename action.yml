@@ -1,40 +1,46 @@
 name: 'Publish results'
 description: 'Publish the results of a Gradle build'
 inputs:
-  build_dir:
-    description: The top level build dir to archive if the build fails
+  job_status:
+    description: The status of the calling job. Either 'success' or 'failure'.
     required: true
-    default: build
   test_result_files:
     description: 'File patterns of test result files. Relative paths are known to work best, while the non-Docker action also works with absolute paths. Supports "*", "**", "?", and "[]" character ranges. Use multiline string for multiple patterns. Patterns starting with "!" exclude the matching files. There have to be at least one pattern starting without a "!".'
     required: true
     default: build/**/test-results/**/*.xml
-  artifacts_dir:
-    description: The artifacts dir to archive if the build succeeds
+  output_dir:
+    description: The directory containing outputs to archive if the build succeeds, such as successfully build artifacts.
     required: true
     default: build/artifacts
+  failure_output_dir:
+    description: The directory containing outputs to archive if the build fails. Anything that would help you diagnose and reproduce the failure.
+    required: true
+    default: build
 
 runs:
   using: "composite"
   steps:
+    - name: Check action input is valid
+      if: ${{ inputs.job_status != 'success' && inputs.job_status != 'failure' }}
+      shell: sh
+      run: echo "job_status must be one of 'success' or 'failure', was '${{ inputs.job_status }}'"; exit 1
 
     - name: Publish Unit Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
-      if: always()
       with:
         check_name: Unit Test Results
         files: ${{ inputs.test_result_files }}
 
-    - name: Archive build results
+    - name: Archive results on success
       uses: actions/upload-artifact@v4
-      if: failure()
+      if: ${{ inputs.job_status == 'success' }}
       with:
-        name: ${{ github.event.repository.name }}-${{github.run_number}}-build
-        path: ${{ inputs.build_dir }}
+        name: ${{ github.event.repository.name }}-${{github.run_number}}-output
+        path: ${{ inputs.output_dir }}
 
-    - name: Archive output
+    - name: Archive results on failure
       uses: actions/upload-artifact@v4
-      if: success()
+      if: ${{ inputs.job_status == 'failure' }}
       with:
-        name: ${{ github.event.repository.name }}-${{github.run_number}}-artifacts
-        path: ${{ inputs.artifacts_dir }}
+        name: ${{ github.event.repository.name }}-${{github.run_number}}-failure-output
+        path: ${{ inputs.failure_output_dir }}

@@ -7,5 +7,13 @@ Use as:
 jobs:
   build:
     steps:
-      - uses: Mahoney-github-actions/gradle-build-output@v1
+      - uses: Mahoney-github-actions/gradle-build-output@v2
+        if: always()
+        with:
+          job_status: ${{ job.status }}
 ```
+
+Captures:
+* Test results in `test_result_files` (default `build/**/test-results/**/*.xml`)
+* Files in `output_dir` on job success (default `build/artifacts`)
+* Files in `failure_output_dir` on job failure (default `build`)
