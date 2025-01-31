@@ -12,4 +12,4 @@ jobs:
     steps:
       - uses: Mahoney-github-actions/gradle-build-output@improve
         with:
-          is_success: incorrect_input
+          job_status: incorrect_input
