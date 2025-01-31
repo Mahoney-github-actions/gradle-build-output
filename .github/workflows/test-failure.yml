@@ -14,4 +14,4 @@ jobs:
       - uses: Mahoney-github-actions/gradle-build-output@improve
         if: always()
         with:
-          is_success: ${{ success() }}
+          is_success: ${{ job.status }}
