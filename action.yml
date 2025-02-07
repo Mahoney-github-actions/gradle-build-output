@@ -28,19 +28,19 @@ runs:
     - name: Publish Unit Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
       with:
-        check_name: Unit Test Results
+        check_name: Unit Test Results for ${{ github.job }}
         files: ${{ inputs.test_result_files }}
 
     - name: Archive results on success
       uses: actions/upload-artifact@v4
       if: ${{ inputs.job_status == 'success' }}
       with:
-        name: ${{ github.event.repository.name }}-${{github.run_number}}-output
+        name: ${{ github.event.repository.name }}-${{github.run_number}}-${{ github.job }}-output
         path: ${{ inputs.output_dir }}
 
     - name: Archive results on failure
       uses: actions/upload-artifact@v4
       if: ${{ inputs.job_status == 'failure' }}
       with:
-        name: ${{ github.event.repository.name }}-${{github.run_number}}-failure-output
+        name: ${{ github.event.repository.name }}-${{github.run_number}}-${{ github.job }}-failure-output
         path: ${{ inputs.failure_output_dir }}
