@@ -1,9 +1,6 @@
 name: 'Publish results'
 description: 'Publish the results of a Gradle build'
 inputs:
-  job_status:
-    description: The status of the calling job. Either 'success' or 'failure'.
-    required: true
   test_result_files:
     description: 'File patterns of test result files. Relative paths are known to work best, while the non-Docker action also works with absolute paths. Supports "*", "**", "?", and "[]" character ranges. Use multiline string for multiple patterns. Patterns starting with "!" exclude the matching files. There have to be at least one pattern starting without a "!".'
     required: true
@@ -20,10 +17,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Check action input is valid
-      if: ${{ inputs.job_status != 'success' && inputs.job_status != 'failure' }}
-      shell: sh
-      run: echo "job_status must be one of 'success' or 'failure', was '${{ inputs.job_status }}'"; exit 1
 
     - name: Publish Unit Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
@@ -33,14 +26,14 @@ runs:
 
     - name: Archive results on success
       uses: actions/upload-artifact@v4
-      if: ${{ inputs.job_status == 'success' }}
+      if: ${{ job.status == 'success' }}
       with:
         name: ${{ github.event.repository.name }}-${{github.run_number}}-${{ github.job }}-output
         path: ${{ inputs.output_dir }}
 
     - name: Archive results on failure
       uses: actions/upload-artifact@v4
-      if: ${{ inputs.job_status == 'failure' }}
+      if: ${{ job.status == 'failure' }}
       with:
         name: ${{ github.event.repository.name }}-${{github.run_number}}-${{ github.job }}-failure-output
         path: ${{ inputs.failure_output_dir }}
