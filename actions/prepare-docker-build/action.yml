@@ -10,7 +10,7 @@ inputs:
   builder_cloud_endpoint:
     description: The docker cloud build endpoint
     required: true
-    default: 'wiremock/wiremock-cloud'
+    default: 'mahoney266/lidalia-world-gha'
   use_builder:
     description: Whether or not to make the builder the default for docker/build-push-action
     required: true
