@@ -4,6 +4,7 @@ inputs:
   dockerhub_username:
     description: The dockerhub user
     required: true
+    default: 'mahoney266'
   dockerhub_token:
     description: A token that allows running against the cloud driver
     required: true
