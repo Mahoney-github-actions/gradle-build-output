@@ -1,0 +1,44 @@
+name: Build a docker image
+
+inputs:
+  dockerhub_username:
+    description: The dockerhub user
+    required: true
+  dockerhub_token:
+    description: A token that allows running against the cloud driver
+    required: true
+  builder_cloud_endpoint:
+    description: The docker cloud build endpoint
+    required: true
+    default: 'wiremock/wiremock-cloud'
+  use_builder:
+    description: Whether or not to make the builder the default for docker/build-push-action
+    required: true
+    default: 'true'
+  install_builder:
+    description: Whether or not to make the builder the default for docker running on the build box
+    required: true
+    default: 'true'
+
+outputs:
+  cloud-builder-name:
+    description: The builder name for the configured builder, so it can be used in subsequent builds
+    value: ${{ steps.cloud-builder.outputs.name }}
+
+runs:
+  using: "composite"
+  steps:
+
+    - uses: docker/login-action@v3
+      with:
+        username: ${{ inputs.dockerhub_username }}
+        password: ${{ inputs.dockerhub_token }}
+
+    - uses: docker/setup-buildx-action@v3
+      id: cloud-builder
+      with:
+        version: "lab:latest"
+        driver: cloud
+        endpoint: ${{ inputs.builder_cloud_endpoint }}
+        use: ${{ inputs.use_builder }}
+        install: ${{ inputs.install_builder }}

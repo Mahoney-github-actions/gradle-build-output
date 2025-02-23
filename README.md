@@ -9,8 +9,6 @@ jobs:
     steps:
       - uses: Mahoney-github-actions/gradle-build-output@v2
         if: always()
-        with:
-          job_status: ${{ job.status }}
 ```
 
 Captures:
