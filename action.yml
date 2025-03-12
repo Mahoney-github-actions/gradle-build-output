@@ -14,6 +14,14 @@ inputs:
     required: true
     default: build
 
+outputs:
+  success_output:
+    description: The name of the uploaded artifact containing the results of a successful build
+    value: ${{ github.event.repository.name }}-${{github.run_number}}-${{ github.job }}-output
+  failure_output:
+    description: The name of the uploaded artifact containing the results of a failed build
+    value: ${{ github.event.repository.name }}-${{github.run_number}}-${{ github.job }}-failure-output
+
 runs:
   using: "composite"
   steps:
@@ -25,6 +33,7 @@ runs:
         files: ${{ inputs.test_result_files }}
 
     - name: Archive results on success
+      id: success
       uses: actions/upload-artifact@v4
       if: ${{ job.status == 'success' }}
       with:
@@ -32,6 +41,7 @@ runs:
         path: ${{ inputs.output_dir }}
 
     - name: Archive results on failure
+      id: failure
       uses: actions/upload-artifact@v4
       if: ${{ job.status == 'failure' }}
       with:
