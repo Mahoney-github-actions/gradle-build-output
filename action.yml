@@ -34,7 +34,7 @@ runs:
 
     - name: Archive results on success
       id: success
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: ${{ job.status == 'success' }}
       with:
         name: ${{ github.event.repository.name }}-${{github.run_number}}-${{ github.job }}-output
@@ -42,7 +42,7 @@ runs:
 
     - name: Archive results on failure
       id: failure
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: ${{ job.status == 'failure' }}
       with:
         name: ${{ github.event.repository.name }}-${{github.run_number}}-${{ github.job }}-failure-output
