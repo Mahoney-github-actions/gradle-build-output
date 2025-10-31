@@ -12,7 +12,7 @@ inputs:
     default: build
   job-name:
     description: An identifier for this job. By default the github job name.
-    default: ${{ github.job }}
+    required: false
 
 outputs:
   output-artifact-id:
@@ -43,20 +43,25 @@ runs:
       shell: bash
       run: |
         if [ "${{ job.status }}" = "success" ]; then
-          echo "output-dir=${{ inputs.output-dir }}" >> "$GITHUB_ENV"
+          echo "output_dir=${{ inputs.output-dir }}" >> "$GITHUB_ENV"
         else
-          echo "output-dir=${{ inputs.failure-output-dir }}" >> "$GITHUB_ENV"
+          echo "output_dir=${{ inputs.failure-output-dir }}" >> "$GITHUB_ENV"
+        fi
+        if [[ -n "${{ inputs.job-name }}" ]]; then
+          echo "job_name=${{ inputs.job-name }}" >> "$GITHUB_ENV"
+        else
+          echo "job_name=${{ github.job }}" >> "$GITHUB_ENV"
         fi
 
     - name: Publish Unit Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
       with:
-        check_name: Unit Test Results for ${{ inputs.job-name }}
+        check_name: Unit Test Results for ${{ env.job_name }}
         files: ${{ inputs.test-result-files }}
 
     - name: Archive results
       id: output
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ github.event.repository.name }}-${{github.run_number}}-${{ inputs.job-name }}-output
-        path: ${{ env.output-dir }}
+        name: ${{ github.event.repository.name }}-${{github.run_number}}-${{ env.job_name }}-output
+        path: ${{ env.output_dir }}
