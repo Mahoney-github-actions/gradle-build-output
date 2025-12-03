@@ -1,49 +1,67 @@
 name: 'Publish results'
 description: 'Publish the results of a Gradle build'
 inputs:
-  test_result_files:
+  test-result-files:
     description: 'File patterns of test result files. Relative paths are known to work best, while the non-Docker action also works with absolute paths. Supports "*", "**", "?", and "[]" character ranges. Use multiline string for multiple patterns. Patterns starting with "!" exclude the matching files. There have to be at least one pattern starting without a "!".'
-    required: true
     default: build/**/test-results/**/*.xml
-  output_dir:
+  output-dir:
     description: The directory containing outputs to archive if the build succeeds, such as successfully build artifacts.
-    required: true
     default: build/artifacts
-  failure_output_dir:
+  failure-output-dir:
     description: The directory containing outputs to archive if the build fails. Anything that would help you diagnose and reproduce the failure.
-    required: true
     default: build
+  job-name:
+    description: An identifier for this job. By default the github job name.
+    required: false
 
 outputs:
-  success_output:
-    description: The name of the uploaded artifact containing the results of a successful build
-    value: ${{ github.event.repository.name }}-${{github.run_number}}-${{ github.job }}-output
-  failure_output:
-    description: The name of the uploaded artifact containing the results of a failed build
-    value: ${{ github.event.repository.name }}-${{github.run_number}}-${{ github.job }}-failure-output
+  output-artifact-id:
+    description: >
+      A unique identifier for the uploaded artifact containing the results of the build. Empty if the artifact upload failed.
 
+      This ID can be used as input to other APIs to download, delete or get more information about an artifact: https://docs.github.com/en/rest/actions/artifacts
+    value: ${{ steps.output.artifact-id }}
+  output-artifact-url:
+    value: ${{ steps.output.artifact-url }}
+    description: >
+      A download URL for the uploaded artifact containing the results of the build. Empty if the artifact upload failed.
+
+      This download URL only works for requests Authenticated with GitHub. Anonymous downloads will be prompted to first login. 
+      If an anonymous download URL is needed than a short time restricted URL can be generated using the download artifact API: https://docs.github.com/en/rest/actions/artifacts#download-an-artifact    
+
+      This URL will be valid for as long as the artifact exists and the workflow run and repository exists. Once an artifact has expired this URL will no longer work.
+      Common uses cases for such a download URL can be adding download links to artifacts in descriptions or comments on pull requests or issues.
+  output-artifact-digest:
+    value: ${{ steps.output.artifact-artifact-digest }}
+    description: >
+      SHA-256 digest for the uploaded artifact containing the results of the build. Empty if the artifact upload failed.
 runs:
   using: "composite"
   steps:
 
+    - name: Set variables
+      shell: bash
+      run: |
+        if [ "${{ job.status }}" = "success" ]; then
+          echo "output_dir=${{ inputs.output-dir }}" >> "$GITHUB_ENV"
+        else
+          echo "output_dir=${{ inputs.failure-output-dir }}" >> "$GITHUB_ENV"
+        fi
+        if [[ -n "${{ inputs.job-name }}" ]]; then
+          echo "job_name=${{ inputs.job-name }}" >> "$GITHUB_ENV"
+        else
+          echo "job_name=${{ github.job }}" >> "$GITHUB_ENV"
+        fi
+
     - name: Publish Unit Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
       with:
-        check_name: Unit Test Results for ${{ github.job }}
-        files: ${{ inputs.test_result_files }}
+        check_name: Unit Test Results for ${{ env.job_name }}
+        files: ${{ inputs.test-result-files }}
 
-    - name: Archive results on success
-      id: success
+    - name: Archive results
+      id: output
       uses: actions/upload-artifact@v4
-      if: ${{ job.status == 'success' }}
       with:
-        name: ${{ github.event.repository.name }}-${{github.run_number}}-${{ github.job }}-output
-        path: ${{ inputs.output_dir }}
-
-    - name: Archive results on failure
-      id: failure
-      uses: actions/upload-artifact@v4
-      if: ${{ job.status == 'failure' }}
-      with:
-        name: ${{ github.event.repository.name }}-${{github.run_number}}-${{ github.job }}-failure-output
-        path: ${{ inputs.failure_output_dir }}
+        name: ${{ github.event.repository.name }}-${{github.run_number}}-${{ env.job_name }}-output
+        path: ${{ env.output_dir }}
