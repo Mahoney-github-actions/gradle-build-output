@@ -61,16 +61,15 @@ runs:
 
     - name: Publish Unit Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
-      if: ${{ inputs.publish-unit-test-results }}
+      if: ${{ inputs.publish-unit-test-results == 'true' }}
       with:
         check_name: Unit Test Results for ${{ env.job_name }}
         files: ${{ inputs.test-result-files }}
-        ignore_runs: ${{ inputs.test-result-ignore }}
 
     - name: Archive results
       id: archive-results
       uses: actions/upload-artifact@v4
-      if: ${{ inputs.archive-results }}
+      if: ${{ inputs.archive-results == 'true' }}
       with:
         name: ${{ github.event.repository.name }}-${{github.run_number}}-${{ env.job_name }}-output
         path: ${{ env.output_dir }}
