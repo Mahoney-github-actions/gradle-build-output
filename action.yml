@@ -68,7 +68,7 @@ runs:
 
     - name: Archive results
       id: archive-results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       if: ${{ inputs.archive-results == 'true' }}
       with:
         name: ${{ github.event.repository.name }}-${{github.run_number}}-${{ env.job_name }}-output
